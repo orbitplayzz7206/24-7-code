@@ -7,9 +7,19 @@ import time
 
 def display_banner():
     print(r"""
-
+       _     ___    __ ___       ___   ____  
+      dM.    `MM    d'  `MMb     dMM'  6MMMMb/
+     ,MMb     MM   d'   MMM.   ,PMM  8P    YM
+     d'YM.    MM  d'    M`Mb   d'MM 6M      Y
+    ,P `Mb    MM d'     M YM. ,P MM MM       
+    d'  YM.   MMd'      M `Mb d' MM MM       
+   ,P   `Mb   MMYM.     M  YM.P  MM MM       
+   d'    YM.  MM YM.    M  `Mb'  MM MM       
+  ,MMMMMMMMb  MM  YM.   M   YP   MM YM      6
+  d'      YM. MM   YM.  M   `'   MM  8b    d9
+_dM_     _dMM_MM_   YM._M_      _MM_  YMMMM9 
                                                        
-                              AKMC
+                              
     """)
 
 def generate_random_string(length=100):
