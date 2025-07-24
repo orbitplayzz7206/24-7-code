@@ -1,0 +1,147 @@
+#!/bin/bash
+
+# ASCII Art
+ascii_art="
+
+       _    _  _              
+      / \  | |/ /   _ __  ___ 
+     / _ \ | ' / | | '_ \/ __|
+    / ___ \| . \ |_| | | \__ \\
+   /_/   \_\_|\_\__,__| |_|___/
+                                 
+"
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+YELLOW='\033[0;33m'
+NC='\033[0m' # No Color
+
+# Function for consistent message formatting
+echo_message() {
+  echo -e "${CYAN}[AKPort]${NC} $1"
+}
+
+# Clear the screen
+clear
+
+# Check if the script is run as root
+if [ "$EUID" -ne 0 ]; then
+  echo -e "${RED}Please run this script as root.${NC}"
+  exit 1
+fi
+
+echo -e "${CYAN}$ascii_art${NC}"
+echo_message "Welcome to AKPort Minecraft Hosting Panel Installer"
+echo_message "Version 1.0 | Developed by AKMC"
+
+# Check system requirements
+echo_message "* Checking system requirements"
+
+# Check for minimum RAM (2GB)
+total_ram=$(free -m | awk '/Mem:/ {print $2}')
+if [ "$total_ram" -lt 2000 ]; then
+  echo -e "${YELLOW}Warning: Your system has less than 2GB RAM (${total_ram}MB detected).${NC}"
+  echo -e "${YELLOW}AKPort may not perform optimally.${NC}"
+  sleep 3
+fi
+
+# Check for available disk space (5GB)
+free_space=$(df -BG / | awk 'NR==2 {print $4}' | tr -d 'G')
+if [ "$free_space" -lt 5 ]; then
+  echo -e "${RED}Error: Your system has less than 5GB free disk space (${free_space}GB detected).${NC}"
+  echo -e "${RED}Installation cannot continue.${NC}"
+  exit 1
+fi
+
+echo_message "* System meets minimum requirements"
+
+# Dependency installation
+echo_message "* Installing Dependencies"
+
+# Update package list and install dependencies
+sudo apt update
+sudo apt install -y curl software-properties-common build-essential python3
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs 
+sudo apt install -y git nginx
+
+echo_message "* Dependencies installed successfully"
+
+# Firewall configuration
+echo_message "* Configuring firewall (UFW)"
+sudo ufw allow 22
+sudo ufw allow 80
+sudo ufw allow 443
+sudo ufw allow 3001
+sudo ufw --force enable
+echo_message "* Firewall configured"
+
+# Panel installation
+echo_message "* Installing AKPort Panel"
+
+# Create directory and clone repository
+mkdir -p akport
+cd akport || { echo_message "Failed to change directory to akport"; exit 1; }
+git clone https://github.com/achul123/panel5.git
+cd panel5 || { echo_message "Failed to change directory to panel"; exit 1; }
+npm install
+
+echo_message "* Panel files installed successfully"
+
+# Database setup
+echo_message "* Setting up database"
+npm run seed
+npm run createUser
+
+echo_message "* Database setup complete"
+
+# PM2 setup
+echo_message "* Setting up PM2 process manager"
+sudo npm install -g pm2
+pm2 start index.js --name "AKPort Panel"
+pm2 save
+pm2 startup
+
+echo_message "* PM2 setup complete"
+
+# Nginx reverse proxy setup
+echo_message "* Setting up Nginx reverse proxy"
+sudo rm /etc/nginx/sites-enabled/default 2>/dev/null
+sudo bash -c 'cat > /etc/nginx/sites-available/akport << EOF
+server {
+    listen 80;
+    server_name _;
+
+    location / {
+        proxy_pass http://localhost:3001;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    }
+}
+EOF'
+sudo ln -s /etc/nginx/sites-available/akport /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl restart nginx
+
+echo_message "* Nginx configured successfully"
+
+# Installation complete
+clear
+echo -e "${CYAN}$ascii_art${NC}"
+echo_message "AKPort Panel Installation Complete!"
+echo_message ""
+echo -e "${GREEN}Access your panel at: http://$(curl -s ifconfig.me)${NC}"
+echo -e "${GREEN}or http://localhost:3001 if accessing locally${NC}"
+echo_message ""
+echo -e "${YELLOW}Important commands:${NC}"
+echo -e "  Start panel: ${CYAN}pm2 start AKPort Panel${NC}"
+echo -e "  Stop panel: ${CYAN}pm2 stop AKPort Panel${NC}"
+echo -e "  View logs: ${CYAN}pm2 logs AKPort Panel${NC}"
+echo_message ""
+echo_message "* Made by AKMC | AKPort v1.0"
