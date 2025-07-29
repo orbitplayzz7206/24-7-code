@@ -22,4 +22,10 @@ curl -s https://packagecloud.io/install/repositories/pufferpanel/pufferpanel/scr
 sudo apt update
 sudo apt install -y pufferpanel
 
-echo -e "\e[1;32m✅ PufferPanel installation complete, Also Subcribe AKMC GAMERZ!\e[0m"
+# Add PufferPanel user
+sudo pufferpanel user add
+
+# Enable and start the PufferPanel service
+sudo systemctl enable --now pufferpanel
+
+echo -e "\e[1;32m✅ PufferPanel installation complete, Also Subscribe AKMC GAMERZ!\e[0m"
