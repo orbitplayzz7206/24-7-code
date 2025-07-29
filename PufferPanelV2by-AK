@@ -12,8 +12,15 @@ echo ""
 
 # 🚀 Installing PufferPanel
 echo -e "\e[1;36m>>> Starting PufferPanel installation...\e[0m"
+
+# Required before sudo
+apt install -y sudo
+
 sudo apt update
-sudo apt install -y curl sudo
+sudo apt install -y curl
+
+# Optional attempt to install systemd (won't work in containers)
+sudo apt install -y systemd
 
 # Add PufferPanel repository
 curl -s https://packagecloud.io/install/repositories/pufferpanel/pufferpanel/script.deb.sh?any=true | sudo bash
