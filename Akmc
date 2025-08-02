@@ -1,0 +1,61 @@
+cat << "EOF"
+
+  ____                      ____   ___   ____ 
+ |  _ \ __ _ _ __ _ __ ___ |  _ \ / _ \ / ___|
+ | |_) / _` | '__| '__/ _ \| | | | | | | |    
+ |  __/ (_| | |  | | | (_) | |_| | |_| | |___ 
+ |_|   \__,_|_|  |_|  \___/|____/ \___/ \____|
+ 🤍 Framework Installer - github.com/ParaGOD
+
+EOF
+
+echo "Starting Installation of Blueprint.zip"
+echo "-------------------------------------"
+
+echo "[1/14] Installing required packages (ca-certificates, curl, gnupg)..."
+sudo apt-get install -y ca-certificates curl gnupg
+
+echo "[2/14] Creating keyrings directory..."
+sudo mkdir -p /etc/apt/keyrings
+
+echo "[3/14] Downloading and adding NodeSource GPG key..."
+curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+
+echo "[4/14] Adding NodeSource repository..."
+echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
+
+echo "[5/14] Updating package lists..."
+sudo apt-get update
+
+echo "[6/14] Installing Node.js..."
+sudo apt-get install -y nodejs
+
+echo "[7/14] Installing Yarn globally..."
+sudo npm i -g yarn
+
+echo "[8/14] Changing to Pterodactyl directory..."
+cd /var/www/pterodactyl
+
+echo "[9/14] Running yarn install..."
+yarn
+
+echo "[10/14] Installing additional tools (zip, unzip, git, curl, wget)..."
+sudo apt install -y zip unzip git curl wget
+
+echo "[11/14] Downloading latest Blueprint release..."
+wget "$(curl -s https://api.github.com/repos/BlueprintFramework/framework/releases/latest | grep 'browser_download_url' | cut -d '"' -f 4)" -O release.zip
+
+echo "[12/14] Unzipping release..."
+unzip release.zip
+
+echo "[13/14] Making blueprint.sh executable..."
+chmod +x blueprint.sh
+
+echo "[14/14] Running blueprint installation script..."
+bash blueprint.sh
+
+echo "-------------------------------------"
+echo "Blueprint extensions installed successfully! 🎉"
+echo "           Made by ParaGOD"
+echo "       github.com/ParaGOD"
+echo "-------------------------------------"
